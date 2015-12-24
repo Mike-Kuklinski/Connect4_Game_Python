@@ -1,6 +1,6 @@
 ### Connect4_Game_Python
 ### Author: Mike Kuklinski
-### Date: 2-13-2015
+### Date: 12-23-2015
 
 # Introduction
 
