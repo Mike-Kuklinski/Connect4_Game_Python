@@ -20,6 +20,7 @@ In later stages, if it can't figure out which move to make after 15 secs, it rev
 ##Included in this repo are the following:
 - Single file python code for executing the game
 - Image files associated with the chip stacks and game buttons
+- Executable Game File for the game created through PyInstaller
 
 ##Notes 
 The following modules are needed for the program:
