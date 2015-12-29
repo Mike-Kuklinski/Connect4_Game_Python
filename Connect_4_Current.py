@@ -13,6 +13,7 @@ import copy
 import math
 import random
 import time
+import numpy as np
 
 
 # Program Structure
@@ -41,8 +42,8 @@ Init. - Monte Carlo with NTRIAL[0] iterations
 MOVE_STRATEGY[0] - Monte Carlo with NTRIAL[1] iterations
 MOVE_STRATEGY[1] - DFS without Trimming
 """
-MOVE_STRATEGY = [0.80, 0.70] # Percent of emtpy spaces remaining 
-NTRIALS = [500,1000]
+MOVE_STRATEGY = [0.85, 0.75, 0.35] # Percent of emtpy spaces remaining 
+NTRIALS = [1000,1500]
 MOVE_TIME = 10
 #==============================================================================
 # Grid str representation dictionary
@@ -69,10 +70,15 @@ BEST = {'RED' : {'best' : (-5, [-1, -1], 1000), 'win' : 1, 'lose' : -1},
 BRAIN = {'RED' : 'Human',
          'BLUE' : 'Computer'}
          
+encrypt = {0: 'WHITE',
+          1: PLAYER_1,
+          -1: PLAYER_2}
 
 # Grid state tracking dictionaries for computer moves
 P1_grid_states = {}     
 P2_grid_states = {}
+P1_trim_grid_state = {}
+P2_trim_grid_state = {}
 
 ###############################################################################          
 # 2. Helper Functions
@@ -84,6 +90,8 @@ def grid_reset():
     global P1_grid_states, P2_grid_states
     P1_grid_states = {}
     P2_grid_states = {}
+    P1_trim_grid_state = {}
+    P2_trim_grid_state = {}
 
 def set_first_turn(player):
     """
@@ -158,13 +166,13 @@ def get_move(game_board, game_state, trace = 1):
     elif empty_spaces >= math.ceil(MOVE_STRATEGY[1] * total_spaces):
         #print 'Monte Carlo Move Selected (',NTRIALS[1],'trials)'
         selected_move = board_move_MC(game_board, game_state, NTRIALS[1])
-#    elif empty_spaces >= math.ceil(MOVE_STRATEGY[2] * total_spaces):
-#        if game_state._player_turn == PLAYER_1:
-#            print 'Trimmed Depth First Search Move Selected'
-#            selected_move = board_move_DFS(game_board, game_state, P1_trim_grid_state, True, trace)
-#        else:
-#            print 'Trimmed Depth First Search Move Selected'
-#            selected_move = board_move_DFS(game_board, game_state, P2_trim_grid_state, True, trace)
+    elif empty_spaces >= math.ceil(MOVE_STRATEGY[2] * total_spaces):
+        if game_state._player_turn == PLAYER_1:
+            #print 'Trimmed Depth First Search Move Selected'
+            selected_move = board_move_DFS(game_board, game_state, P1_trim_grid_state, True, trace, 15)
+        else:
+            #print 'Trimmed Depth First Search Move Selected'
+            selected_move = board_move_DFS(game_board, game_state, P2_trim_grid_state, True, trace, 15)
     else:
         if game_state._player_turn == PLAYER_1:
             #print 'Full Depth First Search Move Selected'
@@ -180,11 +188,29 @@ def get_move(game_board, game_state, trace = 1):
     if time_remaining > 0:
         if game_state._player_turn == PLAYER_1:
             #print 'Building player 1 dictionary'
-            board_move_DFS(game_board, game_state, P1_grid_states, True, trace, time_remaining)        
+            board_move_DFS(game_board, game_state, P1_trim_grid_state, True, trace, time_remaining)        
         else:
             #print 'Building player 2 dictionary'
-            board_move_DFS(game_board, game_state, P2_grid_states, True, trace, time_remaining)
+            board_move_DFS(game_board, game_state, P2_trim_grid_state, True, trace, time_remaining)
     return selected_move
+
+
+def get_translate_move(array_board):
+    """
+    Function which takes an array board format and returns the move to make for
+    playing against tom's AI.
+    """
+    temp_grid = [['WHITE' for row_idx in range(6)] for col_idx in range(7)] 
+    for row_idx in range(6):
+        for col_idx in range(7):
+            temp_grid[col_idx][row_idx] = encrypt[array_board[row_idx][col_idx]]
+    temp_board = GameBoard(7, 6, 4, grid = temp_grid)
+    temp_state = GameState()
+    temp_state._player_turn = PLAYER_2
+    temp_state._game_over = False
+    move = get_move(temp_board, temp_state)
+    return move[1][0]
+
 
 #==============================================================================
 # Monte Carlo (MC) Approach
@@ -290,10 +316,11 @@ def board_move_DFS(game_board, game_state, grid, trim, trace, time_check = float
                     move_list.append((SCORES[result], potential_move, trace))
                     # If trimming, break loop at a guarenteed win or loss.
                     if trim:
-                        if temp_player == PLAYER_1:
-                            if result == PLAYER_1:
-                                break
-                        elif temp_player == PLAYER_2:
+                        #if temp_player == PLAYER_1:
+                        #    if result == PLAYER_1:
+                        #        break
+                        #elif temp_player == PLAYER_2:
+                        if temp_player == PLAYER_2:    
                             if result == PLAYER_2:
                                 break
                 # If terminate state is not found, continued recursion on opponents move            
@@ -304,10 +331,10 @@ def board_move_DFS(game_board, game_state, grid, trim, trace, time_check = float
                         move_list.append((opp_move[0], potential_move, opp_move[2]))
                         # If trimming, break loop at a guarenteed win or loss.
                         if trim:
-                            if temp_player == PLAYER_1:
-                                if opp_move[0] == 1:
-                                    break
-                            elif temp_player == PLAYER_2:
+                            #if temp_player == PLAYER_1:
+                            #    if opp_move[0] == 1:
+                            #        break
+                            if temp_player == PLAYER_2:
                                 if opp_move[0] == -1:
                                     break
         # Once all moves and scores are logged, determine, optimal move
