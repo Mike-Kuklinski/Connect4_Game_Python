@@ -42,9 +42,9 @@ Init. - Monte Carlo with NTRIAL[0] iterations
 MOVE_STRATEGY[0] - Monte Carlo with NTRIAL[1] iterations
 MOVE_STRATEGY[1] - DFS without Trimming
 """
-MOVE_STRATEGY = [0.85, 0.75, 0.35] # Percent of emtpy spaces remaining 
-NTRIALS = [1000,1500]
-MOVE_TIME = 10
+MOVE_STRATEGY = [0.85, 0.75, 0.25] # Percent of emtpy spaces remaining 
+NTRIALS = [1000,2000]
+MOVE_TIME = 15
 #==============================================================================
 # Grid str representation dictionary
 CHIP_LETTER = {'WHITE' : 'E',
@@ -169,10 +169,10 @@ def get_move(game_board, game_state, trace = 1):
     elif empty_spaces >= math.ceil(MOVE_STRATEGY[2] * total_spaces):
         if game_state._player_turn == PLAYER_1:
             #print 'Trimmed Depth First Search Move Selected'
-            selected_move = board_move_DFS(game_board, game_state, P1_trim_grid_state, True, trace, 15)
+            selected_move = board_move_DFS(game_board, game_state, P1_trim_grid_state, True, trace, 20)
         else:
             #print 'Trimmed Depth First Search Move Selected'
-            selected_move = board_move_DFS(game_board, game_state, P2_trim_grid_state, True, trace, 15)
+            selected_move = board_move_DFS(game_board, game_state, P2_trim_grid_state, True, trace, 20)
     else:
         if game_state._player_turn == PLAYER_1:
             #print 'Full Depth First Search Move Selected'
